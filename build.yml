@@ -1,0 +1,47 @@
+name: Build Windows installer
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Build EXE
+        run: |
+          python -m PyInstaller --noconfirm --clean AXUS-Treolan-Manager.spec
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: |
+          choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: powershell
+        run: |
+          iscc.exe installer.iss
+
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: AXUS-Treolan-Manager-EXE
+          path: dist/AXUS-Treolan-Manager.exe
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AXUS-Treolan-Manager-Installer
+          path: installer/AXUS-Treolan-Manager-Setup.exe
